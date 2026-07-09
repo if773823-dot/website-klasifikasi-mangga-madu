@@ -78,21 +78,30 @@ try {
     $dataset = $pdo->query(
         'SELECT id_dataset, mean_red, mean_green, mean_blue, label_kelas FROM dataset_latih'
     )->fetchAll();
+    $negativeDataset = table_exists($pdo, 'dataset_negatif')
+        ? $pdo->query('SELECT id_negatif, mean_red, mean_green, mean_blue, label_kelas FROM dataset_negatif')->fetchAll()
+        : [];
 
     $classifier = new KnnClassifier();
     $result = $classifier->classify($feature, $dataset, $nilaiK);
+    $nearestNegativeDistance = $negativeDataset ? nearest_feature_distance($feature, $negativeDataset) : null;
+    $isWithinMangoDistance = $result['jarak_terdekat'] <= $config['classification']['max_nearest_distance'];
+    $isCloserToNegative = $nearestNegativeDistance !== null && $nearestNegativeDistance < $result['jarak_terdekat'];
+    $isMangoDetected = $isWithinMangoDistance && !$isCloserToNegative;
 
-    $stmt = $pdo->prepare(
-        'INSERT INTO hasil_klasifikasi (id_citra, nilai_k, jarak_euclidean, kelas_prediksi, label_asli)
-         VALUES (:id_citra, :nilai_k, :jarak_euclidean, :kelas_prediksi, :label_asli)'
-    );
-    $stmt->execute([
-        'id_citra' => $idCitra,
-        'nilai_k' => $nilaiK,
-        'jarak_euclidean' => $result['jarak_euclidean'],
-        'kelas_prediksi' => $result['kelas_prediksi'],
-        'label_asli' => $labelAsli,
-    ]);
+    if ($isMangoDetected) {
+        $stmt = $pdo->prepare(
+            'INSERT INTO hasil_klasifikasi (id_citra, nilai_k, jarak_euclidean, kelas_prediksi, label_asli)
+             VALUES (:id_citra, :nilai_k, :jarak_euclidean, :kelas_prediksi, :label_asli)'
+        );
+        $stmt->execute([
+            'id_citra' => $idCitra,
+            'nilai_k' => $nilaiK,
+            'jarak_euclidean' => $result['jarak_euclidean'],
+            'kelas_prediksi' => $result['kelas_prediksi'],
+            'label_asli' => $labelAsli,
+        ]);
+    }
 
     $pdo->commit();
 } catch (Throwable $exception) {
@@ -140,10 +149,38 @@ function label_class(string $label): string
     return strtolower(str_replace(' ', '-', $label));
 }
 
+function table_exists(PDO $pdo, string $table): bool
+{
+    $statement = $pdo->prepare('SHOW TABLES LIKE :table_name');
+    $statement->execute(['table_name' => $table]);
+
+    return (bool) $statement->fetchColumn();
+}
+
+function nearest_feature_distance(array $feature, array $dataset): ?float
+{
+    $nearest = null;
+
+    foreach ($dataset as $row) {
+        $distance = sqrt(
+            (($feature['mean_red'] - $row['mean_red']) ** 2) +
+            (($feature['mean_green'] - $row['mean_green']) ** 2) +
+            (($feature['mean_blue'] - $row['mean_blue']) ** 2)
+        );
+
+        if ($nearest === null || $distance < $nearest) {
+            $nearest = $distance;
+        }
+    }
+
+    return $nearest === null ? null : round($nearest, 4);
+}
+
 $newPoint = [
     'x' => graph_x((float) $feature['mean_red'], $plot),
     'y' => graph_y((float) $feature['mean_green'], $plot),
 ];
+$displayPrediction = $isMangoDetected ? $result['kelas_prediksi'] : 'Bukan Mangga';
 
 ?>
 <!doctype html>
@@ -197,15 +234,26 @@ $newPoint = [
                 <div class="panel">
                     <div class="panel-body">
                         <div class="result-band">
-                            <p class="result-label">Kelas Prediksi</p>
-                            <p class="result-value"><?= htmlspecialchars($result['kelas_prediksi']) ?></p>
+                            <p class="result-label"><?= $isMangoDetected ? 'Kelas Prediksi' : 'Status Deteksi' ?></p>
+                            <p class="result-value"><?= htmlspecialchars($displayPrediction) ?></p>
                         </div>
 
                         <table style="margin-top: 18px;">
                             <tr><th>Nilai K</th><td><?= htmlspecialchars((string) $nilaiK) ?></td></tr>
+                            <tr><th>Jarak tetangga terdekat</th><td><?= htmlspecialchars((string) $result['jarak_terdekat']) ?></td></tr>
+                            <tr>
+                                <th>Jarak ke dataset bukan mangga</th>
+                                <td><?= $nearestNegativeDistance === null ? 'Belum ada dataset negatif' : htmlspecialchars((string) $nearestNegativeDistance) ?></td>
+                            </tr>
+                            <tr><th>Ambang deteksi mangga</th><td><?= htmlspecialchars((string) $config['classification']['max_nearest_distance']) ?></td></tr>
                             <tr><th>Rata-rata jarak kelas terpilih</th><td><?= htmlspecialchars((string) $result['jarak_euclidean']) ?></td></tr>
                             <tr><th>File tersimpan</th><td><?= htmlspecialchars($storedName) ?></td></tr>
                         </table>
+                        <?php if (!$isMangoDetected): ?>
+                            <div class="empty-state" style="margin-top: 14px;">
+                                Citra tidak masuk ke pola dataset mangga madu atau lebih dekat ke dataset bukan mangga, sehingga tidak diklasifikasikan sebagai Mentah, Setengah Matang, atau Matang.
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -299,7 +347,7 @@ $newPoint = [
                                     <?php endforeach; ?>
 
                                     <circle class="point-new" cx="<?= htmlspecialchars((string) $newPoint['x']) ?>" cy="<?= htmlspecialchars((string) $newPoint['y']) ?>" r="5"></circle>
-                                    <text class="knn-annotation" x="<?= htmlspecialchars((string) min($newPoint['x'] + 10, 210)) ?>" y="<?= htmlspecialchars((string) max($newPoint['y'] - 8, 18)) ?>">Prediksi: <?= htmlspecialchars($result['kelas_prediksi']) ?></text>
+                                    <text class="knn-annotation" x="<?= htmlspecialchars((string) min($newPoint['x'] + 10, 210)) ?>" y="<?= htmlspecialchars((string) max($newPoint['y'] - 8, 18)) ?>"><?= $isMangoDetected ? 'Prediksi:' : 'Status:' ?> <?= htmlspecialchars($displayPrediction) ?></text>
                                 </svg>
                             </div>
                         </div>

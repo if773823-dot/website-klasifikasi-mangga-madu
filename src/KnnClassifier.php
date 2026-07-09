@@ -50,6 +50,7 @@ final class KnnClassifier
         return [
             'kelas_prediksi' => $prediction,
             'jarak_euclidean' => round($distanceTotals[$prediction] / $votes[$prediction], 4),
+            'jarak_terdekat' => round($nearest[0]['distance'], 4),
             'nearest_neighbors' => $nearest,
         ];
     }

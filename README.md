@@ -112,3 +112,37 @@ Untuk folder dengan subfolder:
 ```powershell
 python tools\images_folder_to_dataset_sql.py "D:\path\ke\folder_setengah_matang" --recursive
 ```
+
+## Import Dataset Bukan Mangga
+
+Untuk mencegah sistem memaksa foto selain mangga menjadi `Mentah`, `Setengah Matang`, atau `Matang`, tambahkan contoh gambar bukan mangga ke `dataset_negatif`.
+
+Contoh isi folder:
+
+- apel
+- jeruk
+- daun
+- tangan
+- meja
+- botol
+- gambar kosong/background
+
+Buat tabel negatif:
+
+```powershell
+php tools\import_sql.php database\create_dataset_negatif.sql
+```
+
+Buat SQL dari folder gambar bukan mangga:
+
+```powershell
+python tools\images_folder_to_negative_sql.py "D:\path\ke\folder_bukan_mangga"
+```
+
+Import ke database:
+
+```powershell
+php tools\import_sql.php database\import_dataset_negatif.sql
+```
+
+Setelah data negatif tersedia, proses upload akan menolak citra yang lebih dekat ke dataset `Bukan Mangga` daripada dataset mangga.

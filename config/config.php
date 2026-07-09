@@ -18,5 +18,6 @@ return [
     ],
     'classification' => [
         'default_k' => 3,
+        'max_nearest_distance' => 25,
     ],
 ];
