@@ -112,10 +112,7 @@ try {
     http_response_code(500);
     echo '<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<title>Gagal Memproses</title><link rel="stylesheet" href="assets/app.css"></head><body>';
-    echo '<main class="error-page"><div class="panel"><div class="panel-header"><h1 class="panel-title">Gagal Memproses Gambar</h1></div><div class="panel-body">';
-    echo '<p>' . htmlspecialchars($exception->getMessage()) . '</p>';
-    echo '<a class="button-link" href="index.php">Kembali</a>';
-    echo '</div></div></main></body></html>';
+    echo '<main class="app-frame"><aside class="app-sidebar" aria-label="Navigasi utama"><div class="sidebar-logo">M</div><nav class="sidebar-nav"><a class="sidebar-item" href="index.php" title="Dashboard">D</a><a class="sidebar-item" href="evaluation.php" title="Evaluasi">E</a><a class="sidebar-item" href="#riwayat" title="Riwayat">R</a></nav><div class="sidebar-user">IF</div></aside><section class="dashboard-main"><header class="dashboard-header"><div class="profile-block"><div class="profile-avatar">IF</div><div><h1>Iqbal Firdaus</h1><p>Gagal memproses gambar</p></div></div><div class="header-actions"><a class="soft-button" href="index.php">Kembali ke dashboard</a></div></header><article class="dashboard-card"><div class="card-head"><div><p class="eyebrow">Error</p><h2>Gagal Memproses Gambar</h2></div></div><div class="panel-body"><p>' . htmlspecialchars($exception->getMessage()) . '</p><a class="button-link" href="index.php">Kembali</a></div></article></section></main></body></html>';
     exit;
 }
 
@@ -192,33 +189,47 @@ $displayPrediction = $isMangoDetected ? $result['kelas_prediksi'] : 'Bukan Mangg
     <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
-    <main class="shell">
-        <header class="topbar">
-            <div class="brand">
-                <div class="brand-mark">M</div>
+    <main class="app-frame">
+        <aside class="app-sidebar" aria-label="Navigasi utama">
+            <div class="sidebar-logo">M</div>
+            <nav class="sidebar-nav">
+                <a class="sidebar-item active" href="index.php" title="Dashboard">D</a>
+                <a class="sidebar-item" href="evaluation.php" title="Evaluasi">E</a>
+                
+            </nav>
+            <div class="sidebar-user">IF</div>
+        </aside>
+
+        <section class="dashboard-main">
+            <header class="dashboard-header">
+                <div class="profile-block">
+                    <div class="profile-avatar">IF</div>
+                    <div>
+                        <h1>Iqbal Firdaus</h1>
+                        <p>Hasil klasifikasi mangga madu</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <a class="soft-button" href="evaluation.php">Evaluasi Akurasi</a>
+                    <a class="soft-button" href="index.php">Uji Citra Baru</a>
+                </div>
+            </header>
+
+            <div class="section-heading">
                 <div>
-                    <h1 class="brand-title">Hasil Klasifikasi</h1>
-                    <p class="brand-subtitle">Ekstraksi RGB dan K-Nearest Neighbors</p>
+                    <h2>Rincian Prediksi</h2>
+                    <p>Gambar uji, fitur warna, tetangga terdekat, dan visualisasi KNN.</p>
                 </div>
             </div>
-            <div class="nav-actions">
-                <a class="ghost-link" href="evaluation.php">Evaluasi Akurasi</a>
-                <a class="button-link" href="index.php">Uji Citra Baru</a>
-            </div>
-        </header>
 
-        <div class="section-heading">
-            <div>
-                <h2>Rincian Prediksi</h2>
-                <p>Gambar uji, fitur warna, tetangga terdekat, dan visualisasi KNN.</p>
-            </div>
-        </div>
-
-        <section class="layout">
-            <div class="grid">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Citra Yang Diuji</h2>
+            <section class="dashboard-grid">
+                <article class="dashboard-card upload-card">
+                    <div class="card-head">
+                        <div>
+                            <p class="eyebrow">Citra</p>
+                            <h2>Citra Yang Diuji</h2>
+                        </div>
+                        <span class="mini-badge"><?= htmlspecialchars($displayPrediction) ?></span>
                     </div>
                     <div class="panel-body">
                         <div class="preview">
@@ -228,159 +239,185 @@ $displayPrediction = $isMangoDetected ? $result['kelas_prediksi'] : 'Bukan Mangg
                                 <span><?= htmlspecialchars($feature['ukuran_citra']) ?></span>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="panel">
-                    <div class="panel-body">
-                        <div class="result-band">
+                        <div class="result-band" style="margin-top: 16px;">
                             <p class="result-label"><?= $isMangoDetected ? 'Kelas Prediksi' : 'Status Deteksi' ?></p>
                             <p class="result-value"><?= htmlspecialchars($displayPrediction) ?></p>
                         </div>
 
-                        <table style="margin-top: 18px;">
-                            <tr><th>Nilai K</th><td><?= htmlspecialchars((string) $nilaiK) ?></td></tr>
-                            <tr><th>Jarak tetangga terdekat</th><td><?= htmlspecialchars((string) $result['jarak_terdekat']) ?></td></tr>
-                            <tr>
-                                <th>Jarak ke dataset bukan mangga</th>
-                                <td><?= $nearestNegativeDistance === null ? 'Belum ada dataset negatif' : htmlspecialchars((string) $nearestNegativeDistance) ?></td>
-                            </tr>
-                            <tr><th>Ambang deteksi mangga</th><td><?= htmlspecialchars((string) $config['classification']['max_nearest_distance']) ?></td></tr>
-                            <tr><th>Rata-rata jarak kelas terpilih</th><td><?= htmlspecialchars((string) $result['jarak_euclidean']) ?></td></tr>
-                            <tr><th>File tersimpan</th><td><?= htmlspecialchars($storedName) ?></td></tr>
-                        </table>
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <span class="summary-label">Nilai K</span>
+                                <strong class="summary-value"><?= htmlspecialchars((string) $nilaiK) ?></strong>
+                            </div>
+                            <div class="summary-card">
+                                <span class="summary-label">Jarak terdekat</span>
+                                <strong class="summary-value"><?= htmlspecialchars((string) $result['jarak_terdekat']) ?></strong>
+                            </div>
+                            <div class="summary-card">
+                                <span class="summary-label">Jarak negatif</span>
+                                <strong class="summary-value"><?= $nearestNegativeDistance === null ? 'Belum ada dataset negatif' : htmlspecialchars((string) $nearestNegativeDistance) ?></strong>
+                            </div>
+                            <div class="summary-card">
+                                <span class="summary-label">Ambang deteksi</span>
+                                <strong class="summary-value"><?= htmlspecialchars((string) $config['classification']['max_nearest_distance']) ?></strong>
+                            </div>
+                        </div>
+
+                        <dl class="detail-list">
+                            <div class="detail-row">
+                                <dt>Rata-rata jarak kelas terpilih</dt>
+                                <dd><?= htmlspecialchars((string) $result['jarak_euclidean']) ?></dd>
+                            </div>
+                            <div class="detail-row">
+                                <dt>File tersimpan</dt>
+                                <dd><?= htmlspecialchars($storedName) ?></dd>
+                            </div>
+                        </dl>
                         <?php if (!$isMangoDetected): ?>
                             <div class="empty-state" style="margin-top: 14px;">
                                 Citra tidak masuk ke pola dataset mangga madu atau lebih dekat ke dataset bukan mangga, sehingga tidak diklasifikasikan sebagai Mentah, Setengah Matang, atau Matang.
                             </div>
                         <?php endif; ?>
                     </div>
-                </div>
-            </div>
+                </article>
 
-            <div class="grid">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Komposisi RGB</h2>
-                    </div>
-                    <div class="panel-body">
-                        <div class="rgb-card" aria-label="Grafik kolom komposisi RGB">
-                            <?php foreach ($rgbBars as $label => $bar): ?>
-                                <?php $height = round(((float) $bar['value'] / 255) * 100, 2); ?>
-                                <div class="rgb-column">
-                                    <div class="rgb-track">
-                                        <div class="rgb-fill <?= htmlspecialchars($bar['class']) ?>" style="--rgb-level: <?= htmlspecialchars((string) $height) ?>%;"></div>
+                <div class="right-stack">
+                    <article class="dashboard-card">
+                        <div class="card-head">
+                            <div>
+                                <p class="eyebrow">RGB</p>
+                                <h2>Komposisi RGB</h2>
+                            </div>
+                            <span class="mini-badge">Warna</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="rgb-card" aria-label="Grafik kolom komposisi RGB">
+                                <?php foreach ($rgbBars as $label => $bar): ?>
+                                    <?php $height = round(((float) $bar['value'] / 255) * 100, 2); ?>
+                                    <div class="rgb-column">
+                                        <div class="rgb-track">
+                                            <div class="rgb-fill <?= htmlspecialchars($bar['class']) ?>" style="--rgb-level: <?= htmlspecialchars((string) $height) ?>%;"></div>
+                                        </div>
+                                        <div class="rgb-name"><?= htmlspecialchars(str_replace('Mean ', '', $label)) ?></div>
+                                        <div class="rgb-number"><?= htmlspecialchars((string) $bar['value']) ?></div>
                                     </div>
-                                    <div class="rgb-name"><?= htmlspecialchars(str_replace('Mean ', '', $label)) ?></div>
-                                    <div class="rgb-number"><?= htmlspecialchars((string) $bar['value']) ?></div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <div class="panel-body chart" style="padding-top: 0;">
+                            <?php foreach ($rgbBars as $label => $bar): ?>
+                                <?php $width = round(((float) $bar['value'] / 255) * 100, 2); ?>
+                                <div class="bar-row">
+                                    <div class="bar-label"><?= htmlspecialchars($label) ?></div>
+                                    <div class="bar-track">
+                                        <div class="bar-fill <?= htmlspecialchars($bar['class']) ?>" style="width: <?= htmlspecialchars((string) $width) ?>%"></div>
+                                    </div>
+                                    <div class="bar-value"><?= htmlspecialchars((string) $bar['value']) ?></div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
-                    </div>
-                    <div class="panel-body chart" style="padding-top: 0;">
-                        <?php foreach ($rgbBars as $label => $bar): ?>
-                            <?php $width = round(((float) $bar['value'] / 255) * 100, 2); ?>
-                            <div class="bar-row">
-                                <div class="bar-label"><?= htmlspecialchars($label) ?></div>
-                                <div class="bar-track">
-                                    <div class="bar-fill <?= htmlspecialchars($bar['class']) ?>" style="width: <?= htmlspecialchars((string) $width) ?>%"></div>
-                                </div>
-                                <div class="bar-value"><?= htmlspecialchars((string) $bar['value']) ?></div>
+                    </article>
+
+                    <article class="dashboard-card">
+                        <div class="card-head">
+                            <div>
+                                <p class="eyebrow">Visual</p>
+                                <h2>Visualisasi KNN</h2>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Visualisasi KNN</h2>
-                    </div>
-                    <div class="panel-body">
-                        <div class="knn-visual">
-                            <div class="knn-frame">
-                                <div class="knn-title">Before KNN</div>
-                                <svg class="knn-svg" viewBox="0 0 <?= htmlspecialchars((string) $graphWidth) ?> <?= htmlspecialchars((string) $graphHeight) ?>" role="img" aria-label="Grafik sebelum KNN">
-                                    <line class="axis" x1="<?= htmlspecialchars((string) $plot['left']) ?>" y1="<?= htmlspecialchars((string) $plot['bottom']) ?>" x2="<?= htmlspecialchars((string) $plot['right']) ?>" y2="<?= htmlspecialchars((string) $plot['bottom']) ?>"></line>
-                                    <line class="axis" x1="<?= htmlspecialchars((string) $plot['left']) ?>" y1="<?= htmlspecialchars((string) $plot['bottom']) ?>" x2="<?= htmlspecialchars((string) $plot['left']) ?>" y2="<?= htmlspecialchars((string) $plot['top']) ?>"></line>
-                                    <text class="axis-text" x="322" y="238">Mean Red</text>
-                                    <text class="axis-text" x="5" y="24">Mean Green</text>
-
-                                    <?php foreach ($dataset as $row): ?>
-                                        <circle
-                                            class="knn-point point-<?= htmlspecialchars(label_class($row['label_kelas'])) ?>"
-                                            cx="<?= htmlspecialchars((string) graph_x((float) $row['mean_red'], $plot)) ?>"
-                                            cy="<?= htmlspecialchars((string) graph_y((float) $row['mean_green'], $plot)) ?>"
-                                            r="3"
-                                        ></circle>
-                                    <?php endforeach; ?>
-
-                                    <circle class="point-new" cx="<?= htmlspecialchars((string) $newPoint['x']) ?>" cy="<?= htmlspecialchars((string) $newPoint['y']) ?>" r="5"></circle>
-                                    <text class="knn-annotation" x="<?= htmlspecialchars((string) min($newPoint['x'] + 10, 238)) ?>" y="<?= htmlspecialchars((string) max($newPoint['y'] - 8, 18)) ?>">Data baru</text>
-                                </svg>
-                            </div>
-
-                            <div class="knn-frame">
-                                <div class="knn-title">After KNN</div>
-                                <svg class="knn-svg" viewBox="0 0 <?= htmlspecialchars((string) $graphWidth) ?> <?= htmlspecialchars((string) $graphHeight) ?>" role="img" aria-label="Grafik setelah KNN">
-                                    <line class="axis" x1="<?= htmlspecialchars((string) $plot['left']) ?>" y1="<?= htmlspecialchars((string) $plot['bottom']) ?>" x2="<?= htmlspecialchars((string) $plot['right']) ?>" y2="<?= htmlspecialchars((string) $plot['bottom']) ?>"></line>
-                                    <line class="axis" x1="<?= htmlspecialchars((string) $plot['left']) ?>" y1="<?= htmlspecialchars((string) $plot['bottom']) ?>" x2="<?= htmlspecialchars((string) $plot['left']) ?>" y2="<?= htmlspecialchars((string) $plot['top']) ?>"></line>
-                                    <text class="axis-text" x="322" y="238">Mean Red</text>
-                                    <text class="axis-text" x="5" y="24">Mean Green</text>
-
-                                    <?php foreach ($dataset as $row): ?>
-                                        <circle
-                                            class="knn-point point-<?= htmlspecialchars(label_class($row['label_kelas'])) ?>"
-                                            cx="<?= htmlspecialchars((string) graph_x((float) $row['mean_red'], $plot)) ?>"
-                                            cy="<?= htmlspecialchars((string) graph_y((float) $row['mean_green'], $plot)) ?>"
-                                            r="3"
-                                        ></circle>
-                                    <?php endforeach; ?>
-
-                                    <?php foreach ($result['nearest_neighbors'] as $neighbor): ?>
-                                        <line
-                                            class="neighbor-line"
-                                            x1="<?= htmlspecialchars((string) $newPoint['x']) ?>"
-                                            y1="<?= htmlspecialchars((string) $newPoint['y']) ?>"
-                                            x2="<?= htmlspecialchars((string) graph_x((float) $neighbor['mean_red'], $plot)) ?>"
-                                            y2="<?= htmlspecialchars((string) graph_y((float) $neighbor['mean_green'], $plot)) ?>"
-                                        ></line>
-                                    <?php endforeach; ?>
-
-                                    <circle class="point-new" cx="<?= htmlspecialchars((string) $newPoint['x']) ?>" cy="<?= htmlspecialchars((string) $newPoint['y']) ?>" r="5"></circle>
-                                    <text class="knn-annotation" x="<?= htmlspecialchars((string) min($newPoint['x'] + 10, 210)) ?>" y="<?= htmlspecialchars((string) max($newPoint['y'] - 8, 18)) ?>"><?= $isMangoDetected ? 'Prediksi:' : 'Status:' ?> <?= htmlspecialchars($displayPrediction) ?></text>
-                                </svg>
-                            </div>
+                            <span class="mini-badge">KNN</span>
                         </div>
-                        <p class="knn-note">Sumbu X memakai mean red dan sumbu Y memakai mean green. Garis putus-putus menunjukkan tetangga terdekat yang dipakai oleh nilai K.</p>
-                    </div>
-                </div>
+                        <div class="panel-body">
+                            <div class="knn-visual">
+                                <div class="knn-frame">
+                                    <div class="knn-title">Before KNN</div>
+                                    <svg class="knn-svg" viewBox="0 0 <?= htmlspecialchars((string) $graphWidth) ?> <?= htmlspecialchars((string) $graphHeight) ?>" role="img" aria-label="Grafik sebelum KNN">
+                                        <line class="axis" x1="<?= htmlspecialchars((string) $plot['left']) ?>" y1="<?= htmlspecialchars((string) $plot['bottom']) ?>" x2="<?= htmlspecialchars((string) $plot['right']) ?>" y2="<?= htmlspecialchars((string) $plot['bottom']) ?>"></line>
+                                        <line class="axis" x1="<?= htmlspecialchars((string) $plot['left']) ?>" y1="<?= htmlspecialchars((string) $plot['bottom']) ?>" x2="<?= htmlspecialchars((string) $plot['left']) ?>" y2="<?= htmlspecialchars((string) $plot['top']) ?>"></line>
+                                        <text class="axis-text" x="322" y="238">Mean Red</text>
+                                        <text class="axis-text" x="5" y="24">Mean Green</text>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Tetangga Terdekat</h2>
-                    </div>
-                    <div class="panel-body">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID Dataset</th>
-                                    <th>Label</th>
-                                    <th>Jarak</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($result['nearest_neighbors'] as $neighbor): ?>
+                                        <?php foreach ($dataset as $row): ?>
+                                            <circle
+                                                class="knn-point point-<?= htmlspecialchars(label_class($row['label_kelas'])) ?>"
+                                                cx="<?= htmlspecialchars((string) graph_x((float) $row['mean_red'], $plot)) ?>"
+                                                cy="<?= htmlspecialchars((string) graph_y((float) $row['mean_green'], $plot)) ?>"
+                                                r="3"
+                                            ></circle>
+                                        <?php endforeach; ?>
+
+                                        <circle class="point-new" cx="<?= htmlspecialchars((string) $newPoint['x']) ?>" cy="<?= htmlspecialchars((string) $newPoint['y']) ?>" r="5"></circle>
+                                        <text class="knn-annotation" x="<?= htmlspecialchars((string) min($newPoint['x'] + 10, 238)) ?>" y="<?= htmlspecialchars((string) max($newPoint['y'] - 8, 18)) ?>">Data baru</text>
+                                    </svg>
+                                </div>
+
+                                <div class="knn-frame">
+                                    <div class="knn-title">After KNN</div>
+                                    <svg class="knn-svg" viewBox="0 0 <?= htmlspecialchars((string) $graphWidth) ?> <?= htmlspecialchars((string) $graphHeight) ?>" role="img" aria-label="Grafik setelah KNN">
+                                        <line class="axis" x1="<?= htmlspecialchars((string) $plot['left']) ?>" y1="<?= htmlspecialchars((string) $plot['bottom']) ?>" x2="<?= htmlspecialchars((string) $plot['right']) ?>" y2="<?= htmlspecialchars((string) $plot['bottom']) ?>"></line>
+                                        <line class="axis" x1="<?= htmlspecialchars((string) $plot['left']) ?>" y1="<?= htmlspecialchars((string) $plot['bottom']) ?>" x2="<?= htmlspecialchars((string) $plot['left']) ?>" y2="<?= htmlspecialchars((string) $plot['top']) ?>"></line>
+                                        <text class="axis-text" x="322" y="238">Mean Red</text>
+                                        <text class="axis-text" x="5" y="24">Mean Green</text>
+
+                                        <?php foreach ($dataset as $row): ?>
+                                            <circle
+                                                class="knn-point point-<?= htmlspecialchars(label_class($row['label_kelas'])) ?>"
+                                                cx="<?= htmlspecialchars((string) graph_x((float) $row['mean_red'], $plot)) ?>"
+                                                cy="<?= htmlspecialchars((string) graph_y((float) $row['mean_green'], $plot)) ?>"
+                                                r="3"
+                                            ></circle>
+                                        <?php endforeach; ?>
+
+                                        <?php foreach ($result['nearest_neighbors'] as $neighbor): ?>
+                                            <line
+                                                class="neighbor-line"
+                                                x1="<?= htmlspecialchars((string) $newPoint['x']) ?>"
+                                                y1="<?= htmlspecialchars((string) $newPoint['y']) ?>"
+                                                x2="<?= htmlspecialchars((string) graph_x((float) $neighbor['mean_red'], $plot)) ?>"
+                                                y2="<?= htmlspecialchars((string) graph_y((float) $neighbor['mean_green'], $plot)) ?>"
+                                            ></line>
+                                        <?php endforeach; ?>
+
+                                        <circle class="point-new" cx="<?= htmlspecialchars((string) $newPoint['x']) ?>" cy="<?= htmlspecialchars((string) $newPoint['y']) ?>" r="5"></circle>
+                                        <text class="knn-annotation" x="<?= htmlspecialchars((string) min($newPoint['x'] + 10, 210)) ?>" y="<?= htmlspecialchars((string) max($newPoint['y'] - 8, 18)) ?>"><?= $isMangoDetected ? 'Prediksi:' : 'Status:' ?> <?= htmlspecialchars($displayPrediction) ?></text>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="knn-note">Sumbu X memakai mean red dan sumbu Y memakai mean green. Garis putus-putus menunjukkan tetangga terdekat yang dipakai oleh nilai K.</p>
+                        </div>
+                    </article>
+
+                    <article class="dashboard-card">
+                        <div class="card-head">
+                            <div>
+                                <p class="eyebrow">Data</p>
+                                <h2>Tetangga Terdekat</h2>
+                            </div>
+                            <span class="mini-badge">K=<?= htmlspecialchars((string) $nilaiK) ?></span>
+                        </div>
+                        <div class="panel-body">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td><?= htmlspecialchars((string) $neighbor['id_dataset']) ?></td>
-                                        <td><?= htmlspecialchars($neighbor['label_kelas']) ?></td>
-                                        <td><?= htmlspecialchars((string) round($neighbor['distance'], 4)) ?></td>
+                                        <th>ID Dataset</th>
+                                        <th>Label</th>
+                                        <th>Jarak</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($result['nearest_neighbors'] as $neighbor): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars((string) $neighbor['id_dataset']) ?></td>
+                                            <td><?= htmlspecialchars($neighbor['label_kelas']) ?></td>
+                                            <td><?= htmlspecialchars((string) round($neighbor['distance'], 4)) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
                 </div>
-            </div>
+            </section>
         </section>
     </main>
 </body>
